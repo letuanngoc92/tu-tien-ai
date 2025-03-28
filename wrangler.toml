@@ -1,2 +1,5 @@
-compatibility_date = "2024-03-25"
-ai = { binding = "AI" }
+name = "tu-tien-ai"
+compatibility_date = "2025-03-28"
+main = "index.js"
+[ai]
+binding = "AI"
