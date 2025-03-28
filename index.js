@@ -1,40 +1,28 @@
 export default {
   async fetch(request, env) {
-    const ai = env.AI; // Sử dụng binding AI trực tiếp từ env
+    const ai = env.AI; // Binding AI từ Cloudflare
     const url = new URL(request.url);
     const sentence = url.searchParams.get('sentence') || 'Xin chào, bạn khỏe không?';
 
-    // Bước 1: Dịch sang tiếng Anh
-    const translationInput = {
-      text: sentence,
-      source_lang: 'vi',
-      target_lang: 'en'
-    };
-    const translated = await ai.run('@cf/meta/m2m100-1.2b', translationInput);
-    const englishSentence = translated.translated_text;
-
-    // Bước 2: Chuyển sang văn phong tu tiên
-    const tuTienPrompt = `Convert this sentence into an ancient, mystical cultivator style: "${englishSentence}"`;
+    // Prompt yêu cầu chuyển đổi trực tiếp sang văn phong tu tiên tiếng Việt
+    const tuTienPrompt = `
+      Bạn là một bậc tiên nhân am hiểu văn phong tu tiên cổ kính. 
+      Hãy chuyển câu sau thành văn phong tu tiên bằng tiếng Việt: 
+      "${sentence}"
+    `;
+    
+    // Gọi mô hình LLaMA 3
     const tuTienResponse = await ai.run('@cf/meta/llama-3-8b-instruct', {
       prompt: tuTienPrompt,
-      max_tokens: 100
+      max_tokens: 150, // Tăng để có câu dài và chi tiết hơn
+      temperature: 0.7 // Điều chỉnh độ sáng tạo
     });
     const tuTienSentence = tuTienResponse.response;
-
-    // Bước 3: Dịch lại sang tiếng Việt
-    const finalTranslation = {
-      text: tuTienSentence,
-      source_lang: 'en',
-      target_lang: 'vi'
-    };
-    const finalResult = await ai.run('@cf/meta/m2m100-1.2b', finalTranslation);
 
     // Trả về kết quả
     return new Response(JSON.stringify({
       original: sentence,
-      translated_en: englishSentence,
-      tu_tien_en: tuTienSentence,
-      tu_tien_vi: finalResult.translated_text
+      tu_tien_vi: tuTienSentence
     }), {
       headers: { 'Content-Type': 'application/json' },
       status: 200
