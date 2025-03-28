@@ -1,12 +1,10 @@
-import { Ai } from '@cloudflare/ai';
-
 export default {
   async fetch(request, env) {
-    const ai = new Ai(env.AI);
+    const ai = env.AI; // Sử dụng binding AI trực tiếp từ env
     const url = new URL(request.url);
     const sentence = url.searchParams.get('sentence') || 'Xin chào, bạn khỏe không?';
 
-    // Bước 1: Dịch sang tiếng Anh (nếu cần)
+    // Bước 1: Dịch sang tiếng Anh
     const translationInput = {
       text: sentence,
       source_lang: 'vi',
@@ -15,7 +13,7 @@ export default {
     const translated = await ai.run('@cf/meta/m2m100-1.2b', translationInput);
     const englishSentence = translated.translated_text;
 
-    // Bước 2: Chuyển sang văn phong tu tiên (dùng AI sinh văn bản)
+    // Bước 2: Chuyển sang văn phong tu tiên
     const tuTienPrompt = `Convert this sentence into an ancient, mystical cultivator style: "${englishSentence}"`;
     const tuTienResponse = await ai.run('@cf/meta/llama-3-8b-instruct', {
       prompt: tuTienPrompt,
